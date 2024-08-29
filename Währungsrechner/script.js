@@ -1,21 +1,32 @@
-document.getElementById('waehrungsForm').addEventListener('submit', function(event) {
+
+document.getElementById('waehrungsForm').addEventListener('submit', async function(event) {
     event.preventDefault(); // Verhindert das Standardverhalten des Formulars (Seite neu laden)
- 
+
     // Eingabewerte holen
     const betrag = parseFloat(document.getElementById('betrag').value);
-    const waehrung = document.getElementById('waehrung').value;
- 
-    // Wechselkurse definieren
-    const wechselkurse = {
-        eur: 1,        // Basiswährung Euro
-        usd: 1.1,      // Beispiel: 1 EUR = 1.1 USD
-        gbp: 0.85      // Beispiel: 1 EUR = 0.85 GBP
-    };
- 
-    // Berechnung
-    const umgerechneterBetrag = betrag * wechselkurse[waehrung];
- 
-    // Ergebnis anzeigen
-    const ergebnisDiv = document.getElementById('ergebnis');
-    ergebnisDiv.textContent = `Der Betrag in ${waehrung.toUpperCase()} ist: ${umgerechneterBetrag.toFixed(2)}`;
+    const waehrung = document.getElementById('waehrung').value.toUpperCase(); // Großbuchstaben für die Währungscodes
+
+    try {
+        // Abrufen des aktuellen Wechselkurses von der API
+        const response = await fetch(`https://api.frankfurter.app/latest?amount=${betrag}&to=${waehrung}`);
+        
+        if (!response.ok) {
+            throw new Error('Fehler beim Abrufen der Wechselkurse.');
+        }
+
+        const data = await response.json();
+
+        // Berechnung des umgerechneten Betrags
+        const umgerechneterBetrag = data.rates[waehrung];
+
+        // Ergebnis anzeigen
+        const ergebnisDiv = document.getElementById('ergebnis');
+        ergebnisDiv.textContent = `Der Betrag in ${waehrung} ist: ${umgerechneterBetrag.toFixed(2)}`;
+
+    } catch (error) {
+        // Fehlerbehandlung
+        console.error('Fehler:', error);
+        const ergebnisDiv = document.getElementById('ergebnis');
+        ergebnisDiv.textContent = 'Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.';
+    }
 });
